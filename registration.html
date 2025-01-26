@@ -1,0 +1,84 @@
+<!--This was originally ment for the first freecodecamp challenge, 
+so some id tags or other attributes may actually be useless.-->
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Registration</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="styles-registration.css">
+    </head>
+    <body>
+        <main>
+            <div class="center">
+            <h1 id="title">Registration Form</h1>
+            <p id="description"><strong>Hey!</strong> To comment on my site, please login.
+            <br>If you don't have an account yet, you can create one here.</p>
+            <img src="assets/friendly.svg" class="smiley">
+            </div>
+        <form id="survey-form">
+            <fieldset>
+                <legend>Personal Information</legend>
+                <label for="name" id="name-label">What is your name? <input id="name" name="name" type="text" minlength="3" maxlength="35" placeholder="John Doe" required></label>
+                <label for="email" id="email-label">What is your email? <input id="email" name="email" type="email" placeholder="example@mail.com"required></label>
+                <label for="number" id="number-label">How old are you (years)? <input id="number" name="number" type="number" min="16" max="120" placeholder="16" required></label>
+                <label for="password" id="password">Choose a password: <input id="password" name="password" type="password" placeholder="password" pattern="[A-Za-z]+">
+                <label for="dropdown"> How did you find this page?
+                    <select id="dropdown" name="referral">
+                        <option value="">
+                            Please choose an option
+                        </option>
+                        <option value="1">
+                            Search Engine
+                        </option>
+                        <option value="2">
+                            Social Media
+                        </option>
+                        <option value="3">
+                            other
+                        </option>
+                    </select>
+                </label>
+            </fieldset>
+            <fieldset>
+                <legend>Do you want to subscribe to my Newsletter?</legend> 
+                <div class="promise">Don't worry, I will only send you occasional updates - no spam, I promise!</div>
+                <label for="subscribed" > 
+                    <input type="radio" value="yes" id="subscribed" name="newsletter">
+                    I'd like to receive the newsletter
+                </label>
+                <label for="not_subscribed" > 
+                    <input type="radio" value="no" id="not_subscribed" name="newsletter" checked>
+                    I don't need another newsletter 
+                </label>
+            </fieldset>
+            <fieldset>
+                <legend> What are you interested in?</legend>
+                <label for="Technology">
+                    <input type="checkbox" id="Technology" name="interest_technology" value="interest_technology">
+                    Technology
+                </label>
+                <label for="Design">
+                    <input type="checkbox" id="Design" name="interest_design" value="interest_design">
+                    Design
+                </label>
+                <label for="Travel">
+                    <input type="checkbox" id="Travel" name="interest_travel" value="interest_travel">
+                    Travel
+                </label>
+                <label for="Learning">
+                    <input type="checkbox" id="Learning" name="interest_learning" value="interest_learning">
+                    Learning
+                </label>
+            </fieldset>
+            <fieldset>
+                <legend>Share Something Meaningful</legend>
+                What do you want to tell the world?
+                <textarea name="wisdom" id="wisdom" placeholder="Spend less time online..." rows="2" cols="35"></textarea>
+            </fieldset>
+            <input type="submit" name="submit" id="submit">
+
+        </form>
+        </main>
+    </body>
+</html>

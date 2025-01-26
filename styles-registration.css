@@ -1,0 +1,65 @@
+html{
+    font-size: clamp(0.8rem, 1.2rem, 2rem); 
+}
+body {
+    background-color: rgb(235, 240, 243);
+    font-family: Helvetica, sans-serif;
+}
+.smiley{
+    width: 1.5em;
+    margin: -10px 0 0 0;
+}
+.smiley:hover{
+    width: 3em;
+}
+h1, p{
+    margin: 0.5em auto;
+    text-align: center;
+}
+p {
+    display: inline-block;
+}
+.center {
+    text-align: center;
+}
+label {
+    display: block;
+    margin: 0.08rem auto;
+}
+form {
+    width: 60%;
+    min-width: 500px;
+    max-width: 1000px;
+    margin: auto;
+}
+.promise {
+    font-size: 0.8em;
+    margin: -0.25em auto 0.25em 0.25em;
+}
+textarea {
+    vertical-align: top;
+}
+input, textarea, select {
+    padding: 0.02rem;
+    font-size: 0.9rem;
+    margin-top: 0.3rem;
+}
+input[type=submit]{
+    background-color: hsl(0, 14%, 90%);
+    margin: 0 auto;
+    display: block;
+    text-align: center;
+    width: 10%;
+    min-width: 60px
+}
+input[type=submit]:hover{
+    background-color: hsl(0, 14%, 75%);
+    color: hsl(0, 0%, 20%);
+}
+
+fieldset{
+    margin: 0.6rem 0;
+}
+fieldset:hover {
+    box-shadow: 2px 2px 4px hsl(191 25% 75%) ;
+}
