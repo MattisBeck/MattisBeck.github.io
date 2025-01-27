@@ -20,9 +20,9 @@ so some id tags or other attributes may actually be useless.-->
             <fieldset>
                 <legend>Personal Information</legend>
                 <label for="name" id="name-label">What is your name? <input id="name" name="name" type="text" minlength="3" maxlength="35" placeholder="John Doe" required></label>
-                <label for="email" id="email-label">What is your email? <input id="email" name="email" type="email" placeholder="example@mail.com"required></label>
+                <label for="email" id="email-label">What is your email? <input id="email" name="email" type="email" placeholder="example@mail.com" required></label>
                 <label for="number" id="number-label">How old are you (years)? <input id="number" name="number" type="number" min="16" max="120" placeholder="16" required></label>
-                <label for="password" id="password">Choose a password: <input id="password" name="password" type="password" placeholder="password" pattern="[A-Za-z]+">
+                <label for="password" id="password">Choose a password: <input id="password" name="password" type="password" placeholder="password" pattern="[A-Za-z]+" required>
                 <label for="dropdown"> How did you find this page?
                     <select id="dropdown" name="referral">
                         <option value="">
@@ -80,5 +80,8 @@ so some id tags or other attributes may actually be useless.-->
 
         </form>
         </main>
+        <footer>
+            <div><a href="/index.html"  class="returnToIndex">Return to index</a></div>
+         </footer>
     </body>
 </html>

@@ -12,10 +12,6 @@ body {
 .smiley:hover{
     width: 3em;
 }
-h1, p{
-    margin: 0.5em auto;
-    text-align: center;
-}
 p {
     display: inline-block;
 }
@@ -62,4 +58,8 @@ fieldset{
 }
 fieldset:hover {
     box-shadow: 2px 2px 4px hsl(191 25% 75%) ;
+}
+.returnToIndex{
+    color: hsl(202, 11%, 60%);
+    font-size: 0.5rem;
 }
