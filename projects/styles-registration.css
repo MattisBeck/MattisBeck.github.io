@@ -1,9 +1,14 @@
 html{
     font-size: clamp(0.4rem, 1.2rem, 2rem); 
+    height: 100%
 }
 body {
     background-color: rgb(235, 240, 243);
     font-family: Helvetica, sans-serif;
+    position: relative;
+    display:flex;
+    flex-direction: column;
+    height: 100%;
 }
 .smiley{
     width: 1.5em;
@@ -11,6 +16,9 @@ body {
 }
 .smiley:hover{
     width: 3em;
+}
+main{
+    flex: 1;
 }
 p {
     display: inline-block;
@@ -57,9 +65,12 @@ fieldset{
     margin: 0.6rem 0;
 }
 fieldset:hover {
-    box-shadow: 2px 2px 4px hsl(191 25% 75%) ;
+    box-shadow: 0px 0px 4px hsl(191 25% 75%) ;
 }
 .returnToIndex{
     color: hsl(202, 11%, 60%);
-    font-size: 0.5rem;
+    font-size: 0.7rem;
+}
+.footer{
+margin: auto 0.6rem 0.6rem 0.6rem;
 }
