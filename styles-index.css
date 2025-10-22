@@ -1,14 +1,91 @@
-body{
-    font-size: 16px;
-    background-color: rgb(235, 240, 243);
-    font-family: Helvetica, sans-serif;
+:root {
+  --ink: #232323;
+  --paper: #f5f5f5;
+  --surface: #f0f0f0;
+  --accent: #0047ab;
+  --rule: #cfcfcf;
+  --description: #777;
 }
-main {
-    margin-left: 10px
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ink: #e8e8e8;
+    --paper: #111213;
+    --surface: #16171a;
+    --accent: #82aaff;
+    --rule: #2a2a2a;
+    --description: #888;  
+  }
+  .wrap { border-color: var(--rule); }
+  .site-footer { color: #aaa; }
+  .intro p { color: #aaa; }
+  .tags li { background: var(--surface); }
 }
-.intro p {
-    margin: 0 0 6 0 px;
+
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: 16px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
 }
-ul li {
-    margin: 8px 0;
+
+.wrap {
+  max-width: 720px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+  border: 1px solid var(--rule);
+  background: #fff0;
+}
+
+.site-header, .site-footer {
+  border-bottom: 1px dotted var(--rule);
+  padding: .75rem 1rem;
+}
+
+.site-footer {
+  border-top: 1px dotted var(--rule);
+  border-bottom: 0;
+  text-align: center;
+  color: var(--description);
+}
+
+.nav {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+a {
+  color: var(--accent);
+  text-decoration-skip-ink: auto;
+}
+a:hover, a:focus { text-decoration: underline; }
+
+.intro { padding: 1.25rem 1rem 0; }
+.intro h1 { margin: 0 0 .25rem; font-size: 1.6rem; }
+.intro p { margin: .25rem 0; color: var(--ink); }
+hr { border: 0; border-top: 1px dotted var(--rule); margin: 1rem 0; }
+
+.block { padding: 1rem; }
+.block h2 { margin: 0 0 .5rem; font-size: 1.2rem; }
+
+.list { margin: .25rem 0 0; padding-left: 1rem; }
+.list li { margin: .25rem 0; }
+.meta { color: var(--description); font-size: .9em; }
+
+.tags {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  gap: .5rem;
+  flex-wrap: wrap;
+}
+.tags li {
+  border: 1px solid var(--rule);
+  padding: .15rem .4rem; 
+  border-radius: 2px;
+  background: var(--surface);
 }
