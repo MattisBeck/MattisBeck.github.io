@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Homelab & VPS — Mattis Beck</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="My Homelab and VPS setup — Docker, WireGuard, reverse proxy and self-hosted services." />
+  <meta name="author" content="Mattis Beck">
+  <meta name="keywords" content="Homelab, VPS, Docker, WireGuard, self-hosted, reverse proxy, Linux" />
+  <link rel="canonical" href="https://mattisbeck.com/homelab/">
+  <link rel="stylesheet" href="../styles-index.css">
+  <link rel="stylesheet" href="styles-blog.css">
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav">
+      <a href="../index.html">← Home</a>
+      <a href="#overview">Overview</a>
+      <a href="#setup">Setup</a>
+      <a href="#services">Services</a>
+    </nav>
+  </header>
+
+  <main class="wrap">
+    <article class="blog-post">
+      <header class="post-header">
+        <h1>My Homeserver &amp; VPS</h1>
+        <p class="post-meta">Last updated: December 2025</p>
+      </header>
+
+      <section id="overview" class="block" aria-labelledby="overview-title">
+        <h2 id="overview-title">Overview</h2>
+        <p>
+          This is where I document my journey into self-hosting and infrastructure.
+          I run a homeserver at home with a dual-path setup for exposing services.
+        </p>
+        
+        <details class="explainer">
+          <summary>Why self-host at all?</summary>
+          <div class="explainer-content">
+            <ul>
+              <li><strong>Control:</strong> My data stays on my hardware</li>
+              <li><strong>Learning:</strong> Hands-on experience with networking, Linux, Docker</li>
+              <li><strong>Cost:</strong> Long-term, most services are cheaper to self-host</li>
+              <li><strong>Fun:</strong> It's a hobby that actually produces useful things</li>
+            </ul>
+          </div>
+        </details>
+      </section>
+
+      <hr>
+
+      <section id="setup" class="block" aria-labelledby="setup-title">
+        <h2 id="setup-title">The Setup <span class="meta">(planned)</span></h2>
+        
+        <h3>Hardware</h3>
+        <ul class="list">
+          <li>
+            <strong>Homeserver:</strong>
+            <span class="meta">— NUC 13 Pro with an i5-1340P and 16 GB DDR4 RAM</span>
+          </li>
+          <li>
+            <strong>VPS:</strong>
+            <span class="meta">— Oracle's Always Free Tier; it has great value :)</span>
+          </li>
+        </ul>
+        
+        <h3>Network Architecture</h3>
+        <p>I use a <strong>dual-path approach</strong> to expose my services:</p>
+        <!-- MADE WITH ASCIIFLOW THANKS-->
+        <pre class="code-block">
+                                    HOMESERVER
+      ┌───────────────────────────────────────────────────────────┐
+      │    ┌────────────┐    ┌─────────────┐    ┌────────────┐    │
+      │    │  Web Apps  │    │ Gameserver  │    │   Other    │    │
+      │    │  (Tunnel)  │    │ (VPS Path)  │    │  Services  │    │
+      │    └────────────┘    └─────────────┘    └────────────┘    │
+      └───────────┬────────────────────────────────┬──────────────┘
+                  │                                │
+                  │ Primary Path                   │ Secondary Path
+                  │ (HTTP/HTTPS)                   │ (non-HTTP, Games)
+                  ▼                                ▼
+      ┌───────────────────────┐        ┌───────────────────────┐
+      │      Cloudflare       │        │    VPS + WireGuard    │
+      │   (Tunnel + Proxy)    │        │     (public IP)       │
+      └───────────────────────┘        └───────────────────────┘
+        </pre>
+
+        <h3>Path 1: Cloudflare Tunnel (Primary)</h3>
+          <p>
+            Most services go through Cloudflare Tunnels — no ports to open 
+            and free DDoS protection.
+          </p>
+        <details class="explainer">
+          <summary>Why Cloudflare Tunnel as primary?</summary>
+          <div class="explainer-content">
+            <ul>
+              <li><strong>No port forwarding:</strong> Works behind any NAT/firewall</li>
+              <li><strong>DDoS protection:</strong> Cloudflare absorbs attacks</li>
+              <li><strong>Static home IP not needed:</strong> Tunnel handles dynamic IPs</li>
+              <li><strong>Proxy benefits:</strong> Caching, WAF, analytics</li>
+            </ul>
+            <p class="meta">
+              The tunnel creates an outbound-only connection, so I have no open ports — even if I wanted to, I couldn't open ports due to CGNAT.
+            </p>
+          </div>
+        </details>
+
+        <h3>Path 2: WireGuard + VPS (Secondary)</h3>
+        <p>
+          For services that Cloudflare doesn't allow or can't handle 
+          (non-HTTP traffic like game servers), I route through my VPS via WireGuard.
+        </p>
+        <details class="explainer">
+          <summary>When do I use the VPS path?</summary>
+          <div class="explainer-content">
+            <ul>
+              <li><strong>Game servers:</strong> UDP traffic, custom ports</li>
+              <li><strong>Non-HTTP services:</strong> Mail, FTP, custom protocols</li>
+              <li><strong>High-bandwidth:</strong> Video streaming, large file transfers (violates Cloudflare TOS)</li>
+              <li><strong>Unrestricted ports:</strong> Cloudflare Tunnel only supports certain ports</li>
+            </ul>
+            <p class="meta">
+              The VPS has a static public IPv4 and forwards traffic through WireGuard 
+              to my homeserver. In both cases, my home IP is hidden.
+            </p>
+          </div>
+        </details>
+      </section>
+
+      <hr>
+
+      <section id="services" class="block" aria-labelledby="services-title">
+        <h2 id="services-title">Services I Run</h2>
+  
+        <h3>Currently Running</h3>
+        <ul class="list">
+          <li>
+            <strong>AdGuard Home:</strong>
+            <span class="meta">— Network-wide ad blocking. It's shocking how many trackers are out there.</span>
+          </li>
+          <li>
+            <strong>Portainer:</strong>
+            <span class="meta">— Container management UI - just for the sake of it</span>
+          </li>
+        </ul>
+        <p class="meta">All services run as Docker Compose stacks.</p>
+
+        <h3>Planned</h3>
+        <ul class="list">
+          <li><span class="todo">[ ]</span> Traefik + Let's Encrypt</li>
+          <li><span class="todo">[ ]</span> Cloudflare Tunnel</li>
+          <li><span class="todo">[ ]</span> WireGuard to VPS</li>
+          <li><span class="todo">[ ]</span> Obsidian LiveSync</li>
+          <li><span class="todo">[ ]</span> Homepage dashboard</li>
+          <li><span class="todo">[ ]</span> Uptime Kuma</li>
+        </ul>
+      </section>
+
+      <hr>
+
+      <section class="block" aria-labelledby="deepdives-title">
+        <h2 id="deepdives-title">Deep Dives</h2>
+        <p class="meta">Detailed guides for complex setups (coming soon):</p>
+        <ul class="list">
+          <li>
+            <!-- <a href="adguard-home.html">AdGuard Home Setup</a> -->
+            <span class="coming-soon">AdGuard Home Setup</span>
+            <span class="meta">— Step-by-step guide</span>
+          </li>
+        </ul>
+      </section>
+
+      <hr>
+
+      <section class="block" aria-labelledby="lessons-title">
+        <h2 id="lessons-title">Lessons Learned</h2>
+        <ul class="list">
+          <li>Document as you go, not "later".</li>
+          <li>AdGuard Home opens your eyes to how much you're being tracked.</li>
+        </ul>
+      </section>
+
+      <hr>
+
+      <section class="block" aria-labelledby="future-title">
+        <h2 id="future-title">Future Plans</h2>
+        <ul class="list">
+          <li><span class="todo">[ ]</span> Automated encrypted backups</li>
+          <li><span class="todo">[ ]</span> Write deep dive guides</li>
+          <li><span class="todo">[ ]</span> Document setup on website</li>
+        </ul>
+      </section>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <small>© <span id="current-year">2025</span> Mattis — <a href="../index.html">back to home</a></small>
+  </footer>
+
+  <script>
+    document.getElementById('current-year').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
