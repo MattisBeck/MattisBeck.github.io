@@ -25,7 +25,7 @@
     <article class="blog-post">
       <header class="post-header">
         <h1>My Homeserver &amp; VPS</h1>
-        <p class="post-meta">Last updated: December 2025</p>
+        <p class="post-meta">Last updated: January 2026</p>
       </header>
 
       <section id="overview" class="block" aria-labelledby="overview-title">
@@ -51,7 +51,7 @@
       <hr>
 
       <section id="setup" class="block" aria-labelledby="setup-title">
-        <h2 id="setup-title">The Setup <span class="meta">(planned)</span></h2>
+        <h2 id="setup-title">The Setup</h2>
         
         <h3>Hardware</h3>
         <ul class="list">
@@ -137,21 +137,33 @@
         <ul class="list">
           <li>
             <strong>AdGuard Home:</strong>
-            <span class="meta">— Network-wide ad blocking. It's shocking how many trackers are out there.</span>
+            <span class="meta">— Network-wide ad blocking and DNS filtering</span>
+          </li>
+          <li>
+            <strong>Traefik:</strong>
+            <span class="meta">— Reverse proxy with automatic HTTPS via Let's Encrypt</span>
+          </li>
+          <li>
+            <strong>Cloudflare Tunnel:</strong>
+            <span class="meta">— Zero-trust access without port forwarding</span>
+          </li>
+          <li>
+            <strong>WireGuard:</strong>
+            <span class="meta">— VPN tunnel between VPS and homeserver (non-dockerized)</span>
+          </li>
+          <li>
+            <strong>Obsidian LiveSync:</strong>
+            <span class="meta">— Self-hosted sync with CouchDB</span>
           </li>
           <li>
             <strong>Portainer:</strong>
-            <span class="meta">— Container management UI - just for the sake of it</span>
+            <span class="meta">— Container management UI</span>
           </li>
         </ul>
-        <p class="meta">All services run as Docker Compose stacks.</p>
+        <p class="meta">Most services run as Docker Compose stacks, except WireGuard which runs natively.</p>
 
         <h3>Planned</h3>
         <ul class="list">
-          <li><span class="todo">[ ]</span> Traefik + Let's Encrypt</li>
-          <li><span class="todo">[ ]</span> Cloudflare Tunnel</li>
-          <li><span class="todo">[ ]</span> WireGuard to VPS</li>
-          <li><span class="todo">[ ]</span> Obsidian LiveSync</li>
           <li><span class="todo">[ ]</span> Homepage dashboard</li>
           <li><span class="todo">[ ]</span> Uptime Kuma</li>
         </ul>
@@ -161,12 +173,27 @@
 
       <section class="block" aria-labelledby="deepdives-title">
         <h2 id="deepdives-title">Deep Dives</h2>
-        <p class="meta">Detailed guides for complex setups (coming soon):</p>
+        <p class="meta">Detailed guides for complex setups:</p>
         <ul class="list">
           <li>
-            <!-- <a href="adguard-home.html">AdGuard Home Setup</a> -->
-            <span class="coming-soon">AdGuard Home Setup</span>
-            <span class="meta">— Step-by-step guide</span>
+            <a href="adguard-home.html">AdGuard Home Setup</a>
+            <span class="meta">— DNS filtering, blocklists, network integration</span>
+          </li>
+          <li>
+            <span class="coming-soon">WireGuard VPS → Homeserver</span>
+            <span class="meta">— Connecting VPS to homeserver via WireGuard (coming soon)</span>
+          </li>
+          <li>
+            <span class="coming-soon">Traefik Reverse Proxy</span>
+            <span class="meta">— HTTPS, Let's Encrypt, and routing (coming soon)</span>
+          </li>
+          <li>
+            <span class="coming-soon">Cloudflare Tunnel</span>
+            <span class="meta">— Zero-trust tunnel setup without port forwarding (coming soon)</span>
+          </li>
+          <li>
+            <span class="coming-soon">Obsidian LiveSync</span>
+            <span class="meta">— Self-hosted Obsidian sync with CouchDB (coming soon)</span>
           </li>
         </ul>
       </section>
@@ -195,7 +222,7 @@
   </main>
 
   <footer class="site-footer">
-    <small>© <span id="current-year">2025</span> Mattis — <a href="../index.html">back to home</a></small>
+    <small>© <span id="current-year">2026</span> Mattis — <a href="../index.html">back to home</a></small>
   </footer>
 
   <script>
