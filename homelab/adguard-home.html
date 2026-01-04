@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AdGuard Home Setup — Mattis Beck</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Deep dive into setting up AdGuard Home with Docker Compose — DNS filtering, blocklists, and network integration." />
+  <meta name="author" content="Mattis Beck">
+  <meta name="keywords" content="AdGuard Home, DNS, Docker, ad blocking, privacy, self-hosted, homelab" />
+  <link rel="canonical" href="https://mattisbeck.com/homelab/adguard-home.html">
+  <link rel="stylesheet" href="../styles-index.css">
+  <link rel="stylesheet" href="styles-blog.css">
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav">
+      <a href="index.html">← Homelab</a>
+      <a href="#why">Why</a>
+      <a href="#setup">Setup</a>
+      <a href="#config">Config</a>
+      <a href="#lessons">Lessons</a>
+    </nav>
+  </header>
+
+  <main class="wrap">
+    <article class="blog-post">
+      <header class="post-header">
+        <h1>AdGuard Home Setup</h1>
+        <p class="post-meta">Deep Dive — Last updated: January 2026</p>
+      </header>
+
+      <section id="why" class="block" aria-labelledby="why-title">
+        <h2 id="why-title">Why AdGuard Home?</h2>
+        <p>
+          AdGuard Home was my first "real" service after Portainer. Three main reasons:
+        </p>
+        <ul class="list">
+          <li>
+            <strong>Privacy:</strong>
+            <span class="meta">— Network-wide ad and tracker blocking at the DNS level</span>
+          </li>
+          <li>
+            <strong>Local DNS:</strong>
+            <span class="meta">— No more typing IP addresses; use hostnames like <code>adguard.tld.com</code> and resolve locally</span>
+          </li>
+          <li>
+            <strong>Security:</strong>
+            <span class="meta">— DNS-over-HTTPS with malware-blocking upstream resolvers</span>
+          </li>
+        </ul>
+        
+        <details class="explainer">
+          <summary>The eye-opening part</summary>
+          <div class="explainer-content">
+            <p>
+              After one week of running AdGuard Home: <strong>254,800 queries</strong>, 
+              of which <strong>15.7% were blocked</strong>. That's roughly 40,000 blocked 
+              requests in 7 days — and I noticed zero downsides.
+            </p>
+            <p class="meta">
+              The amount of background tracking is pretty significant, even on "idle" devices.
+            </p>
+          </div>
+        </details>
+      </section>
+
+      <hr>
+
+      <section id="setup" class="block" aria-labelledby="setup-title">
+        <h2 id="setup-title">Docker Compose Setup</h2>
+        
+        <h3>The Problem: Port 53 Already in Use</h3>
+        <p>
+          When I first tried to start the container, I got this error:
+        </p>
+        <pre class="code-block">Error response from daemon: failed to bind host port 0.0.0.0:53/tcp: address already in use</pre>
+        <p>
+          Running <code>ss -tulpn | grep :53</code> revealed the culprit: <code>systemd-resolved</code> 
+          was already listening on port 53.
+        </p>
+
+        <details class="explainer">
+          <summary>The solution</summary>
+          <div class="explainer-content">
+            <p>
+              Instead of disabling <code>systemd-resolved</code> entirely, I bound AdGuard Home 
+              to my server's <strong>LAN IP only</strong>. This way:
+            </p>
+            <ul>
+              <li><code>systemd-resolved</code> keeps port 53 on loopback (for the host itself)</li>
+              <li>AdGuard Home gets port 53 on the LAN interface (for all other devices)</li>
+            </ul>
+          </div>
+        </details>
+
+        <h3>Docker Compose File</h3>
+        <pre class="code-block">services:
+  adguardhome:
+    image: adguard/adguardhome
+    container_name: adguardhome
+    restart: always
+    ports:
+      # Bind to LAN IP only (not 0.0.0.0) to avoid conflict with systemd-resolved
+      - "192.168.178.&lt;HOST_ID&gt;:53:53/tcp"
+      - "192.168.178.&lt;HOST_ID&gt;:53:53/udp"
+      # IPv6 ULA address
+      - "[fd00::53]:53:53/tcp"
+      - "[fd00::53]:53:53/udp"
+      # Web UI for initial setup (keep 80/443 free for Traefik later)
+      - "3000:3000/tcp"
+    volumes:
+      - ./appdata/adguardhome/conf:/opt/adguardhome/conf
+      - ./appdata/adguardhome/work:/opt/adguardhome/work
+    logging:
+      driver: json-file
+      options:
+        max-size: "3m"
+        max-file: "3"</pre>
+        <p class="meta">
+          Replace <code>192.168.178.x</code> and <code>fd00::53</code> with your server's actual IPs.
+        </p>
+
+        <h3>Why Port 3000 for the Web UI?</h3>
+        <p>
+          I kept the admin interface on port 3000 instead of 80/443 because I want to 
+          use those ports for <strong>Traefik</strong> later as a reverse proxy.
+        </p>
+      </section>
+
+      <hr>
+
+      <section id="config" class="block" aria-labelledby="config-title">
+        <h2 id="config-title">Configuration</h2>
+
+        <h3>Upstream DNS Servers</h3>
+        <p>I use privacy-focused, security-enhanced upstream resolvers:</p>
+        <ul class="list">
+          <li>
+            <strong>Primary:</strong>
+            <code>https://dns.quad9.net/dns-query</code>
+            <span class="meta">— DNSSEC + malware blocking</span>
+          </li>
+          <li>
+            <strong>Fallback:</strong>
+            <code>https://security.cloudflare-dns.com/dns-query</code>
+            <span class="meta">— Cloudflare's security profile</span>
+          </li>
+        </ul>
+        <p class="meta">
+          Don't forget to enable <strong>DNSSEC validation</strong> in AdGuard Home settings.
+        </p>
+
+        <h3>Blocklists</h3>
+        <p>My current blocklist setup (total rules: ~594,000):</p>
+        <ul class="list">
+          <li><strong>AdGuard DNS filter</strong> <span class="meta">— 121k rules, general ad blocking</span></li>
+          <li><strong>HaGeZi's Pro Blocklist</strong> <span class="meta">— 176k rules, comprehensive</span></li>
+          <li><strong>HaGeZi's Threat Intelligence Feeds</strong> <span class="meta">— 276k rules, malware/phishing</span></li>
+          <li><strong>Phishing URL Blocklist</strong> <span class="meta">— 20k rules, PhishTank + OpenPhish</span></li>
+          <li><strong>HaGeZi's Apple Tracker Blocklist</strong> <span class="meta">— Apple-specific tracking</span></li>
+          <li><strong>HaGeZi's Windows/Office Tracker Blocklist</strong> <span class="meta">— Microsoft telemetry</span></li>
+          <li><strong>Smart-TV Blocklist</strong> <span class="meta">— TV telemetry and ads</span></li>
+        </ul>
+
+        <details class="explainer">
+          <summary>A note on blocklists</summary>
+          <div class="explainer-content">
+            <p>
+              More rules != better. Overlapping lists waste resources, and overly aggressive 
+              lists can break legitimate services. Start with AdGuard DNS filter + HaGeZi Pro, 
+              then add specific lists based on your devices.
+            </p>
+          </div>
+        </details>
+      </section>
+
+      <hr>
+
+      <section id="network" class="block" aria-labelledby="network-title">
+        <h2 id="network-title">Network Integration</h2>
+        
+        <h3>The Dilemma: 100% Filtering vs. Redundancy</h3>
+        <p>I had two options for integrating AdGuard Home into my network:</p>
+
+        <details class="explainer">
+          <summary>Option 1: Server as DNS for all clients</summary>
+          <div class="explainer-content">
+            <p>
+              Set the homeserver as the DNS server in router settings (DHCP). 
+              All clients get it directly.
+            </p>
+            <p><strong>Pro:</strong></p>
+            <ul>
+              <li>100% of traffic goes through AdGuard</li>
+              <li>Per-client statistics</li>
+            </ul>
+            <p><strong>Con:</strong></p>
+            <ul>
+              <li>If server is down → <strong>no DNS → no internet for entire network</strong></li>
+            </ul>
+          </div>
+        </details>
+
+        <details class="explainer">
+          <summary>Option 2: Router uses AdGuard as upstream (my choice)</summary>
+          <div class="explainer-content">
+            <p>
+              Router stays as DNS for clients, but forwards queries to AdGuard Home. 
+              External DNS (e.g., Quad9) as fallback.
+            </p>
+            <p><strong>Pro:</strong></p>
+            <ul>
+              <li>Redundancy: network works even if server is down</li>
+            </ul>
+            <p><strong>Con:</strong></p>
+            <ul>
+              <li>All queries appear to come from router IP (no per-client stats)</li>
+              <li>Fallback DNS bypasses filtering</li>
+            </ul>
+          </div>
+        </details>
+
+        <h3>My Decision</h3>
+        <p>
+          I chose <strong>Option 2</strong>. Redundancy matters more to me than perfect statistics 
+          (which I don't really care about anyway). If my NUC is down for maintenance, 
+          the network shouldn't grind to a halt.
+        </p>
+        <pre class="code-block">Current DNS path:
+Device → Router → AdGuard Home → Quad9/Cloudflare
+                ↘ (fallback) → Quad9 directly</pre>
+
+        <details class="explainer">
+          <summary>IPv6: A Detour I Didn't Plan</summary>
+          <div class="explainer-content">
+            <p>
+              Initially, I wanted to <strong>disable IPv6 entirely</strong> in my router settings. 
+              My reasoning: keep things simple, avoid the complexity of setting up static IPv6 addresses, 
+              and prevent clients from potentially bypassing AdGuard Home via IPv6 DNS servers.
+            </p>
+            <p>
+              However, I had to re-enable IPv6 later when I set up <strong>VPN access to my home network</strong>. 
+              Due to CGNAT (Carrier-Grade NAT), I don't have a static public IPv4 address, which meant 
+              I couldn't reliably connect from outside via IPv4. IPv6 was the solution.
+            </p>
+            <p>
+              This meant I had to configure AdGuard Home properly for IPv6 as well:
+            </p>
+            <ul>
+              <li>Set a <strong>static IPv6 address</strong> for the NUC (ULA: <code>fd00::53</code>)</li>
+              <li>Configure the router to use the NUC as the <strong>primary DNS resolver for both IPv4 and IPv6</strong></li>
+              <li>Ensure both address families route through AdGuard Home to maintain filtering coverage</li>
+            </ul>
+            <p class="meta">
+              IPv6 is also the future — IPv4 address exhaustion is real, and eventually, IPv6-only networks 
+              will become the norm. Better to learn it now than avoid it.
+            </p>
+          </div>
+        </details>
+      </section>
+
+      <hr>
+
+      <section id="lessons" class="block" aria-labelledby="lessons-title">
+        <h2 id="lessons-title">Lessons Learned</h2>
+        <ul class="list">
+          <li>
+            <strong>Port conflicts are common:</strong>
+            <span class="meta">— Always check what's already using a port before binding</span>
+          </li>
+          <li>
+            <strong>Bind to specific IPs:</strong>
+            <span class="meta">— Avoids conflicts and is more secure than 0.0.0.0</span>
+          </li>
+          <li>
+            <strong>Plan for failure:</strong>
+            <span class="meta">— A dead DNS server = dead internet for everyone</span>
+          </li>
+          <li>
+            <strong>Start with fewer blocklists:</strong>
+            <span class="meta">— Add more only if needed; too many can cause false positives</span>
+          </li>
+          <li>
+            <strong>15% blocked is normal:</strong>
+            <span class="meta">— Modern devices are incredibly chatty with telemetry</span>
+          </li>
+        </ul>
+      </section>
+
+      <hr>
+
+      <section class="block" aria-labelledby="next-title">
+        <h2 id="next-title">What's Next</h2>
+        <ul class="list">
+          <li><span class="todo">[x]</span> Set up local DNS rewrites for <code>local hostnames</code></li>
+          <li><span class="todo">[ ]</span> Integrate with Traefik for HTTPS access to the admin UI</li>
+          <li><span class="todo">[x]</span> Document setup</li>
+        </ul>
+      </section>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <small>© <span id="current-year">2025</span> Mattis — <a href="index.html">back to homelab</a></small>
+  </footer>
+
+  <script>
+    document.getElementById('current-year').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
