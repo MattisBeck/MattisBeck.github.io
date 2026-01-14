@@ -1,10 +1,13 @@
 :root {
   --ink: #232323;
-  --paper: #f5f5f5;
-  --surface: #f0f0f0;
+  --paper: #fafafa;
+  --surface: #f5f5f5;
   --accent: #0047ab;
-  --rule: #cfcfcf;
+  --card: #fafafa;
+  --card-border: #e8e8e8;
+  --rule: #d5d5d5;
   --description: #777;
+  --code-bg: #f0f0f0;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -13,8 +16,11 @@
     --paper: #111213;
     --surface: #16171a;
     --accent: #82aaff;
+    --card: #15171a;
+    --card-border: #2a2a2a;
     --rule: #2a2a2a;
     --description: #888;  
+    --code-bg: #1a1b1e;
   }
   .wrap { border-color: var(--rule); }
   .site-footer { color: #aaa; }
@@ -31,17 +37,27 @@ html, body {
   font: 16px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
 }
 
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
 .wrap {
   max-width: 720px;
   margin: 2rem auto;
-  padding: 0 1rem;
+  padding: .5rem 1rem;
   border: 1px solid var(--rule);
+  border-radius: 6px;
   background: #fff0;
+  box-shadow: 0 1px 0 var(--rule);
+  flex: 0 0 auto;
 }
 
 .site-header, .site-footer {
   border-bottom: 1px dotted var(--rule);
   padding: .75rem 1rem;
+  background: var(--surface);
 }
 
 .site-footer {
@@ -49,6 +65,7 @@ html, body {
   border-bottom: 0;
   text-align: center;
   color: var(--description);
+  margin-top: auto;
 }
 
 .nav {
@@ -61,6 +78,8 @@ html, body {
 a {
   color: var(--accent);
   text-decoration-skip-ink: auto;
+  text-decoration-thickness: .08em;
+  text-underline-offset: .18em;
 }
 a:hover, a:focus { text-decoration: underline; }
 
