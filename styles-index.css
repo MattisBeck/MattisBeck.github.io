@@ -6,6 +6,7 @@
   --card: #fafafa;
   --card-border: #e8e8e8;
   --rule: #d5d5d5;
+  --rule-strong: #c0c0c0;
   --description: #777;
   --code-bg: #f0f0f0;
 }
@@ -19,6 +20,7 @@
     --card: #15171a;
     --card-border: #2a2a2a;
     --rule: #2a2a2a;
+    --rule-strong: #3a3a3a;
     --description: #888;  
     --code-bg: #1a1b1e;
   }
@@ -107,4 +109,22 @@ hr { border: 0; border-top: 1px dotted var(--rule); margin: 1rem 0; }
   padding: .15rem .4rem; 
   border-radius: 2px;
   background: var(--surface);
+}
+
+.home .wrap {
+  margin: 1.5rem auto;
+  padding: .25rem 1rem;
+}
+
+.home .intro {
+  padding: .75rem 0 0;
+}
+
+.home .block {
+  padding: .75rem 0;
+}
+
+.home hr {
+  border-top: 1px dotted var(--rule);
+  margin: .75rem 0;
 }

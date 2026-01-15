@@ -26,7 +26,7 @@
     <article class="blog-post">
       <header class="post-header">
         <h1>AdGuard Home Setup</h1>
-        <p class="post-meta">Deep Dive — Last updated: January 2026</p>
+        <p class="post-meta">Deep Dive — Last updated: January 15, 2026</p>
       </header>
 
       <section id="why" class="block" aria-labelledby="why-title">
@@ -117,7 +117,7 @@
         max-size: "3m"
         max-file: "3"</pre>
         <p class="meta">
-          Replace <code>192.168.178.x</code> and <code>fd00::53</code> with your server's actual IPs.
+          Replace <code>192.168.178.&lt;HOST_ID&gt;</code> and <code>fd00::53</code> with your server's actual IPs.
         </p>
 
         <h3>Why Port 3000 for the Web UI?</h3>
@@ -153,13 +153,13 @@
         <h3>Blocklists</h3>
         <p>My current blocklist setup (total rules: ~594,000):</p>
         <ul class="list">
-          <li><strong><a href="https://adguardteam.github.io/HostlistsRegistry/assets/filter_1.txt" target="_blank" rel="noopener">AdGuard DNS filter</a></strong> <span class="meta">— 121k rules, general ad blocking</span></li>
-          <li><strong><a href="https://adguardteam.github.io/HostlistsRegistry/assets/filter_48.txt" target="_blank" rel="noopener">HaGeZi's Pro Blocklist</a></strong> <span class="meta">— 176k rules, comprehensive</span></li>
-          <li><strong><a href="https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/tif.medium.txt" target="_blank" rel="noopener">HaGeZi's Threat Intelligence Feeds</a></strong> <span class="meta">— 276k rules, malware/phishing</span></li>
-          <li><strong><a href="https://adguardteam.github.io/HostlistsRegistry/assets/filter_30.txt" target="_blank" rel="noopener">Phishing URL Blocklist</a></strong> <span class="meta">— 20k rules, PhishTank + OpenPhish</span></li>
-          <li><strong><a href="https://adguardteam.github.io/HostlistsRegistry/assets/filter_67.txt" target="_blank" rel="noopener">HaGeZi's Apple Tracker Blocklist</a></strong> <span class="meta">— Apple-specific tracking</span></li>
-          <li><strong><a href="https://adguardteam.github.io/HostlistsRegistry/assets/filter_63.txt" target="_blank" rel="noopener">HaGeZi's Windows/Office Tracker Blocklist</a></strong> <span class="meta">— Microsoft telemetry</span></li>
-          <li><strong><a href="https://adguardteam.github.io/HostlistsRegistry/assets/filter_7.txt" target="_blank" rel="noopener">Smart-TV Blocklist</a></strong> <span class="meta">— TV telemetry and ads</span></li>
+          <li><strong><a href="https://adguardteam.github.io/HostlistsRegistry/assets/filter_1.txt" title="AdGuard DNS filter blocklist" target="_blank" rel="noopener">AdGuard DNS filter</a></strong> <span class="meta">— 121k rules, general ad blocking</span></li>
+          <li><strong><a href="https://adguardteam.github.io/HostlistsRegistry/assets/filter_48.txt" title="HaGeZi Pro blocklist" target="_blank" rel="noopener">HaGeZi's Pro Blocklist</a></strong> <span class="meta">— 176k rules, comprehensive</span></li>
+          <li><strong><a href="https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/adblock/tif.medium.txt" title="HaGeZi threat intelligence feeds blocklist" target="_blank" rel="noopener">HaGeZi's Threat Intelligence Feeds</a></strong> <span class="meta">— 276k rules, malware/phishing</span></li>
+          <li><strong><a href="https://adguardteam.github.io/HostlistsRegistry/assets/filter_30.txt" title="Phishing URL blocklist (PhishTank + OpenPhish)" target="_blank" rel="noopener">Phishing URL Blocklist</a></strong> <span class="meta">— 20k rules, More Phising</span></li>
+          <li><strong><a href="https://adguardteam.github.io/HostlistsRegistry/assets/filter_67.txt" title="HaGeZi Apple tracker blocklist" target="_blank" rel="noopener">HaGeZi's Apple Tracker Blocklist</a></strong> <span class="meta">— Apple-specific tracking</span></li>
+          <li><strong><a href="https://adguardteam.github.io/HostlistsRegistry/assets/filter_63.txt" title="HaGeZi Windows/Office tracker blocklist" target="_blank" rel="noopener">HaGeZi's Windows/Office Tracker Blocklist</a></strong> <span class="meta">— Microsoft telemetry</span></li>
+          <li><strong><a href="https://adguardteam.github.io/HostlistsRegistry/assets/filter_7.txt" title="Smart-TV blocklist" target="_blank" rel="noopener">Smart-TV Blocklist</a></strong> <span class="meta">— TV telemetry and ads</span></li>
         </ul>
 
         <details class="explainer">
