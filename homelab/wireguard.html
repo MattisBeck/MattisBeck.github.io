@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>WireGuard: VPS &harr; Homeserver &mdash; Mattis Beck</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="WireGuard deep dive: VPS hub, homeserver gateway, split-tunnel clients, and port forwarding." />
+  <meta name="author" content="Mattis Beck">
+  <meta name="keywords" content="WireGuard, VPS, homeserver, VPN, Oracle Cloud, CGNAT, self-hosted, homelab" />
+  <link rel="canonical" href="https://mattisbeck.com/homelab/wireguard.html">
+  <link rel="stylesheet" href="../styles-index.css">
+  <link rel="stylesheet" href="styles-blog.css">
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav">
+      <a href="index.html">&larr; Homelab</a>
+      <a href="#why">Why</a>
+      <a href="#architecture">Architecture</a>
+      <a href="#vps">VPS</a>
+      <a href="#homeserver">Homeserver</a>
+      <a href="#clients">Clients</a>
+      <a href="#troubleshooting">Troubleshooting</a>
+    </nav>
+  </header>
+
+  <main class="wrap">
+    <article class="blog-post">
+      <header class="post-header">
+        <h1>WireGuard: VPS &harr; Homeserver</h1>
+        <p class="post-meta">Deep Dive &mdash; Last updated: January 15, 2026</p>
+      </header>
+
+      <section id="why" class="block" aria-labelledby="why-title">
+        <h2 id="why-title">Why I built this</h2>
+        <p>
+          I wanted access to my home network from the outside without exposing every service.
+          My ISP uses CGNAT, so inbound IPv4 is basically a no-go. The workaround: a small VPS
+          as a public hub, WireGuard as the tunnel, and my homeserver as the gateway.
+        </p>
+        <p>
+          I started with an IPv6-only WireGuard setup on the Fritz!Box. It worked at home,
+          but failed in networks without IPv6 (e.g. my university Wi-Fi). That limitation is
+          why I moved to a VPS endpoint with stable IPv4. It also unlocks services that
+          Cloudflared will not proxy (like Minecraft or other UDP-heavy traffic).
+        </p>
+        <ul class="list">
+          <li><strong>Private admin access:</strong> No open ports at home.</li>
+          <li><strong>Selective exposure:</strong> Forward only the ports I actually need.</li>
+          <li><strong>Consistent access:</strong> Works even on IPv4-only networks.</li>
+        </ul>
+
+        <details class="explainer">
+          <summary>Two birds, one tunnel</summary>
+          <div class="explainer-content">
+            <p>
+              One tunnel, two jobs: remote access into the LAN and targeted port forwarding
+              for specific services like game servers.
+            </p>
+          </div>
+        </details>
+      </section>
+
+      <hr>
+
+      <section id="architecture" class="block" aria-labelledby="architecture-title">
+        <h2 id="architecture-title">Architecture overview</h2>
+        <p>
+          Hub-and-spoke: the VPS has public IPv4/IPv6, the homeserver connects outward and routes
+          into the LAN. Clients always go through the VPS.
+        </p>
+        <pre class="code-block">Client (Phone/Mac)
+        |  WireGuard
+        v
+     VPS (Public IP)
+        |  WireGuard + Routing
+        v
+ Homeserver (10.10.10.2)
+        |  NAT into LAN
+        v
+  LAN (192.168.178.0/24)</pre>
+        <p class="meta">
+          Result: predictable routing and a single place to debug.
+        </p>
+      </section>
+
+      <hr>
+
+      <section id="vps" class="block" aria-labelledby="vps-title">
+        <h2 id="vps-title">VPS prep (Oracle Cloud)</h2>
+        <p>
+          To make this work, I had to prep a few things first, including the WireGuard port
+          and any ports I want to forward.
+        </p>
+        <ul class="list">
+          <li><strong>Enable IPv6:</strong> VCN /56, Subnet /64, route ::/0 to the Internet Gateway.</li>
+          <li><strong>Firewall:</strong> Allow UDP 51820 for 0.0.0.0/0 and ::/0.</li>
+          <li><strong>Port forwards:</strong> Open only the ports you actually forward (e.g. 25565, 24454).</li>
+          <li><strong>Netplan:</strong> Set <code>dhcp6: true</code> in <code>/etc/netplan/50-cloud-init.yaml</code>.</li>
+        </ul>
+
+        <details class="explainer">
+          <summary>If the handshake never shows up</summary>
+          <div class="explainer-content">
+            <p>
+              Oracle + VirtIO can drop UDP due to checksum offloading. Fix it with:
+              <code>sudo ethtool -K enp0s6 rx-checksumming off</code> (best via boot script).
+            </p>
+          </div>
+        </details>
+
+        <h3>WireGuard on the VPS</h3>
+        <p>
+          File: <code>/etc/wireguard/wg0.conf</code>. Keys are placeholders.
+        </p>
+        <pre class="code-block">[Interface]
+Address = 10.10.10.1/24
+ListenPort = 51820
+MTU = 1360
+PrivateKey = &lt;VPS_PRIVATE_KEY&gt;
+
+# 1) Open WireGuard port (force rule to the top)
+PostUp = iptables -I INPUT 1 -p udp --dport 51820 -j ACCEPT
+PostDown = iptables -D INPUT -p udp --dport 51820 -j ACCEPT
+
+# 2) Client-to-client traffic
+PostUp = iptables -I FORWARD 1 -i wg0 -o wg0 -j ACCEPT
+PostDown = iptables -D FORWARD -i wg0 -o wg0 -j ACCEPT
+
+# 3) General forwarding
+PostUp = iptables -I FORWARD 1 -i wg0 -j ACCEPT
+PostDown = iptables -D FORWARD -i wg0 -j ACCEPT
+
+# 4) NAT for VPN traffic
+PostUp = iptables -t nat -A POSTROUTING -o wg0 -j MASQUERADE
+PostDown = iptables -t nat -D POSTROUTING -o wg0 -j MASQUERADE
+
+[Peer]
+# Homeserver as LAN gateway
+PublicKey = &lt;HOMESERVER_PUBLIC_KEY&gt;
+AllowedIPs = 10.10.10.2/32, 192.168.178.0/24
+
+[Peer]
+# Admin client (phone)
+PublicKey = &lt;PHONE_PUBLIC_KEY&gt;
+AllowedIPs = 10.10.10.4/32
+
+[Peer]
+# Admin client (MacBook)
+PublicKey = &lt;MACBOOK_PUBLIC_KEY&gt;
+AllowedIPs = 10.10.10.5/32</pre>
+        <p class="meta">
+          Also set <code>net.ipv4.ip_forward=1</code> in <code>/etc/sysctl.conf</code>.
+        </p>
+      </section>
+
+      <hr>
+
+      <section id="homeserver" class="block" aria-labelledby="homeserver-title">
+        <h2 id="homeserver-title">Homeserver as gateway</h2>
+        <p>
+          The homeserver routes VPN traffic into the LAN. That needs NAT on the LAN interface.
+        </p>
+        <pre class="code-block">[Interface]
+Address = 10.10.10.2/24
+PrivateKey = &lt;HOMESERVER_PRIVATE_KEY&gt;
+
+# NAT: mask VPN traffic into the LAN
+PostUp = iptables -t nat -A POSTROUTING -o &lt;LAN_IF&gt; -j MASQUERADE
+PostDown = iptables -t nat -D POSTROUTING -o &lt;LAN_IF&gt; -j MASQUERADE
+
+[Peer]
+PublicKey = &lt;VPS_PUBLIC_KEY&gt;
+Endpoint = &lt;VPS_PUBLIC_IP&gt;:51820
+PersistentKeepalive = 25
+AllowedIPs = 10.10.10.0/24</pre>
+        <p class="meta">
+          <code>&lt;LAN_IF&gt;</code> is <code>enp86s0</code> for me. Without NAT, LAN replies never return.
+        </p>
+      </section>
+
+      <hr>
+
+      <section id="clients" class="block" aria-labelledby="clients-title">
+        <h2 id="clients-title">Client config (split tunnel)</h2>
+        <p>
+          Goal: only home network traffic goes through the VPN, everything else stays local.
+        </p>
+        <p>
+          I keep <code>AllowedIPs</code> tight so I can still run a second VPN on top and avoid
+          pushing all my traffic through the VPS.
+        </p>
+        <pre class="code-block">[Interface]
+PrivateKey = &lt;CLIENT_PRIVATE_KEY&gt;
+Address = 10.10.10.5/24
+DNS = 9.9.9.9
+
+[Peer]
+PublicKey = &lt;VPS_PUBLIC_KEY&gt;
+Endpoint = &lt;VPS_PUBLIC_IP&gt;:51820
+AllowedIPs = 10.10.10.0/24, 192.168.178.0/24
+PersistentKeepalive = 25</pre>
+        <details class="explainer">
+          <summary>Need a full tunnel?</summary>
+          <div class="explainer-content">
+            <p>
+              For full tunnel in public Wi-Fi, use <code>AllowedIPs = 0.0.0.0/0, ::/0</code>.
+              I keep this optional to avoid turning the VPS into a bottleneck.
+            </p>
+          </div>
+        </details>
+      </section>
+
+      <hr>
+
+      <section class="block" aria-labelledby="ports-title">
+        <h2 id="ports-title">Port forwarding examples</h2>
+        <p>
+          The VPS can forward ports directly to the homeserver. Example for Minecraft + voice chat:
+        </p>
+        <pre class="code-block"># Minecraft (TCP 25565)
+PostUp = iptables -t nat -A PREROUTING -p tcp --dport 25565 -j DNAT --to-destination 10.10.10.2:25565
+PostDown = iptables -t nat -D PREROUTING -p tcp --dport 25565 -j DNAT --to-destination 10.10.10.2:25565
+PostUp = iptables -I FORWARD 1 -i enp0s6 -o wg0 -p tcp --dport 25565 -j ACCEPT
+PostDown = iptables -D FORWARD -i enp0s6 -o wg0 -p tcp --dport 25565 -j ACCEPT
+
+# Simple Voice Chat (UDP 24454)
+PostUp = iptables -t nat -A PREROUTING -p udp --dport 24454 -j DNAT --to-destination 10.10.10.2:24454
+PostDown = iptables -t nat -D PREROUTING -p udp --dport 24454 -j DNAT --to-destination 10.10.10.2:24454
+PostUp = iptables -I FORWARD 1 -i enp0s6 -o wg0 -p udp --dport 24454 -j ACCEPT
+PostDown = iptables -D FORWARD -i enp0s6 -o wg0 -p udp --dport 24454 -j ACCEPT</pre>
+        <p class="meta">
+          Ports and services are examples &mdash; the pattern stays the same: DNAT + FORWARD.
+        </p>
+      </section>
+
+      <hr>
+
+      <section id="troubleshooting" class="block" aria-labelledby="troubleshooting-title">
+        <h2 id="troubleshooting-title">Troubleshooting</h2>
+        <table class="list">
+          <tr>
+            <th>Symptom</th>
+            <th>Cause</th>
+            <th>Fix</th>
+          </tr>
+          <tr>
+            <td>No handshake</td>
+            <td>UDP 51820 blocked upstream</td>
+            <td>Open UDP 51820 in OCI (IPv4 + IPv6) and confirm the VPS firewall allows it.</td>
+          </tr>
+          <tr>
+            <td>Handshake ok, no ping</td>
+            <td>iptables order or missing forward rules</td>
+            <td>Insert rules at the top and allow wg0 forwarding so replies can flow back.</td>
+          </tr>
+          <tr>
+            <td>No LAN access</td>
+            <td>IP forwarding or NAT missing</td>
+            <td>Enable IP forwarding and MASQUERADE on the homeserver LAN interface.</td>
+          </tr>
+        </table>
+      </section>
+
+      <hr>
+
+      <section class="block" aria-labelledby="lessons-title">
+        <h2 id="lessons-title">Lessons learned</h2>
+        <ul class="list">
+          <li>IPv6 solves CGNAT, but not every network speaks it yet.</li>
+          <li>iptables rule order matters more than I expected.</li>
+          <li>Keep <code>AllowedIPs</code> on the clients tight to avoid sending all traffic through the VPS.</li>
+        </ul>
+      </section>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <small>&copy; <span id="current-year">2026</span> Mattis &mdash; <a href="../index.html">back to home</a></small>
+  </footer>
+
+  <script>
+    document.getElementById('current-year').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
