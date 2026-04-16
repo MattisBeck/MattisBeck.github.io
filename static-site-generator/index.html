@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Static Site Generator - Mattis Beck</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A small Python learning project that converts Markdown content into static HTML pages." />
+  <meta name="author" content="Mattis Beck">
+  <meta name="keywords" content="Static site generator, Python, Markdown, HTML, portfolio project" />
+  <link rel="canonical" href="https://mattisbeck.com/static-site-generator/">
+  <link rel="stylesheet" href="../styles-index.css">
+  <link rel="stylesheet" href="../homelab/styles-blog.css">
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav">
+      <a href="../index.html">← Home</a>
+      <a href="#overview">Overview</a>
+      <a href="#why">Why</a>
+      <a href="#how">How it works</a>
+      <a href="#lessons">Lessons</a>
+      <a href="#demo">Demo</a>
+    </nav>
+  </header>
+
+  <main class="wrap">
+    <article class="blog-post">
+      <header class="post-header">
+        <h1>Static Site Generator</h1>
+        <p class="post-meta">Python Project - Last updated: April 16, 2026</p>
+      </header>
+
+      <section id="overview" class="block" aria-labelledby="overview-title">
+        <h2 id="overview-title">Overview</h2>
+        <p>
+          This is a small static site generator I built from scratch in Python.
+          It is inspired by tools like Hugo and Jekyll, but much simpler:
+          it takes Markdown files, combines them with a shared HTML template, copies
+          static assets, and writes out a finished static website.
+        </p>
+        <p>
+          The goal was not to replace mature tools. The goal was to understand what
+          happens underneath them by building the basic pipeline myself.
+        </p>
+      </section>
+
+      <hr>
+
+      <section id="why" class="block" aria-labelledby="why-title">
+        <h2 id="why-title">Why I Built This</h2>
+        <p>
+          I started looking into static site generators because expanding this website
+          by writing HTML by hand can become tedious. At first, I did not even know the
+          term "static site generator"; I just wanted a faster way to turn content into
+          pages without repeating the same HTML structure over and over.
+        </p>
+        <details class="explainer">
+          <summary>Why build my own instead of just using Hugo?</summary>
+          <div class="explainer-content">
+            <ul>
+              <li><strong>Learning:</strong> I wanted to understand the moving parts instead of only using the finished tool.</li>
+              <li><strong>Python practice:</strong> It was a good way to work with file handling, recursion, and parsing.</li>
+              <li><strong>Project structure:</strong> It forced me to separate content, templates, static assets, and generated output.</li>
+            </ul>
+          </div>
+        </details>
+      </section>
+
+      <hr>
+
+      <section id="how" class="block" aria-labelledby="how-title">
+        <h2 id="how-title">How It Works</h2>
+        <p>
+          The project follows a simple content pipeline:
+        </p>
+        <ul class="list">
+          <li>
+            <strong><code>content/</code>:</strong>
+            <span class="meta">- Markdown files live here, including nested folders for page structure</span>
+          </li>
+          <li>
+            <strong><code>template.html</code>:</strong>
+            <span class="meta">- A shared HTML shell that receives the generated page content</span>
+          </li>
+          <li>
+            <strong><code>static/</code>:</strong>
+            <span class="meta">- CSS and images are copied into the output folder</span>
+          </li>
+          <li>
+            <strong><code>docs/</code>:</strong>
+            <span class="meta">- The generated static website, ready for GitHub Pages</span>
+          </li>
+        </ul>
+        <p>
+          The generator walks the content directory recursively, converts Markdown blocks
+          into HTML nodes, injects them into the template, and writes one HTML file for
+          each Markdown page.
+        </p>
+      </section>
+
+      <hr>
+
+      <section class="block" aria-labelledby="website-title">
+        <h2 id="website-title">Why It Does Not Power This Website</h2>
+        <p>
+          This portfolio is still small, custom-built, and updated infrequently. Writing
+          these pages by hand gives me more control over layout and navigation, especially
+          for pages like the Homelab section where each page needs slightly different
+          structure and links.
+        </p>
+        <p>
+          My generator currently supports one shared template for all pages. That is useful
+          for a simple demo site, but too limited for the more handcrafted parts of this
+          website.
+        </p>
+      </section>
+
+      <hr>
+
+      <section id="lessons" class="block" aria-labelledby="lessons-title">
+        <h2 id="lessons-title">Lessons Learned</h2>
+        <ul class="list">
+          <li>Recursive file generation becomes much easier once content and output paths are modeled clearly.</li>
+          <li>A shared template is powerful, but real websites quickly need layout flexibility.</li>
+          <li>Deployment paths matter; a GitHub Pages project page needs the correct base path for CSS and images.</li>
+        </ul>
+      </section>
+
+      <hr>
+
+      <section id="demo" class="block" aria-labelledby="demo-title">
+        <h2 id="demo-title">Demo</h2>
+        <p>
+          The demo site is a small generated article. It uses a Revenge of the Sith essay as sample content so the generator has headings, paragraphs,
+          images, links, and blockquotes to render.
+        </p>
+        <ul class="list">
+          <li>
+            <a href="/static-site-generatorrr/">Open the generated demo article</a>
+            <span class="meta">- sample output built by the generator</span>
+          </li>
+          <li>
+            <a href="https://github.com/MattisBeck/static-site-generatorrr/" target="_blank" rel="noopener">View the GitHub repository</a>
+            <span class="meta">- source code, README, scripts, and tests</span>
+          </li>
+        </ul>
+      </section>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <small>© <span id="current-year">2026</span> Mattis - <a href="../index.html">back to home</a></small>
+  </footer>
+
+  <script>
+    document.getElementById('current-year').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
