@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Obsidian LiveSync &mdash; Mattis Beck</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A short note on my self-hosted Obsidian LiveSync setup with CouchDB." />
+  <meta name="author" content="Mattis Beck">
+  <meta name="keywords" content="Obsidian LiveSync, CouchDB, Obsidian, self-hosted, homelab, notes" />
+  <link rel="canonical" href="https://mattisbeck.com/homelab/obsidian-livesync.html">
+  <link rel="stylesheet" href="../styles-index.css">
+  <link rel="stylesheet" href="styles-blog.css">
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav">
+      <a href="index.html">&larr; Homelab</a>
+      <a href="#why">Why</a>
+      <a href="#setup">Setup</a>
+      <a href="#lessons">Lessons</a>
+    </nav>
+  </header>
+
+  <main class="wrap">
+    <article class="blog-post">
+      <header class="post-header">
+        <h1>Obsidian LiveSync</h1>
+        <p class="post-meta">Self-hosted notes sync &mdash; Last updated: May 27, 2026</p>
+      </header>
+
+      <section id="why" class="block" aria-labelledby="why-title">
+        <h2 id="why-title">Why I use it</h2>
+        <p>
+          I need to take notes on multiple devices with multiple operating systems.
+          Therefore I wanted a private note-taking setup with a lot of flexibility, but I did not want to pay for another small monthly subscription just for sync of a notes app.
+          We already have enough subscriptions.
+          Obsidian gives me the note-taking side, and LiveSync + CouchDB let me host the sync backend myself.
+        </p>
+        <ul class="list">
+          <li><strong>Privacy:</strong> The sync backend runs on hardware I control.</li>
+          <li><strong>No extra monthly fee:</strong> One less subscription.</li>
+          <li><strong>Offline mode:</strong> Notes still work when the server or network is unavailable.</li>
+        </ul>
+      </section>
+
+      <hr>
+
+      <section id="setup" class="block" aria-labelledby="setup-title">
+        <h2 id="setup-title">My setup</h2>
+        <p>
+          The whole setup is pretty simple: Obsidian on my devices, the Self-hosted
+          LiveSync plugin inside Obsidian, and one CouchDB database on the homeserver.
+        </p>
+        <pre class="code-block">Device 1                  Homeserver                  Device 2
+Obsidian + LiveSync  &lt;--&gt;  CouchDB  &lt;--&gt;  Obsidian + LiveSync
+                              ^
+                              |
+                              v
+                    Obsidian + LiveSync
+                           Device 3</pre>
+        <p>
+          CouchDB is only the meeting point. The actual writing still happens in local
+          Markdown files, which is pretty pleasant because it allows me to export them easily.
+        </p>
+
+        <details class="explainer">
+          <summary>Small setup notes</summary>
+          <div class="explainer-content">
+            <ul>
+              <li>CouchDB runs as a single Docker service.</li>
+              <li>LiveSync gets its own database and user.</li>
+              <li>CORS needs to allow the Obsidian app origins.</li>
+              <li>For phones and tablets, HTTPS through a reverse proxy is required.</li>
+            </ul>
+          </div>
+        </details>
+
+        <details class="explainer">
+          <summary>My Docker Compose</summary>
+          <div class="explainer-content">
+            <pre class="code-block">services:
+  couchdb-obsidian-livesync:
+    container_name: obsidian-livesync
+    image: couchdb:3.5.1
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - UMASK=0022
+      - TZ=Europe/Berlin
+      - COUCHDB_USER=${COUCHDB_USER} # from .env
+      - COUCHDB_PASSWORD=${COUCHDB_PASSWORD} # from .env too
+    volumes:
+      - /home/mattis/media/appdata/couchdb/data:/opt/couchdb/data
+      - ./local.ini:/opt/couchdb/etc/local.d/local.ini
+    restart: unless-stopped
+    networks:
+      - proxy
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  proxy:
+    external: true</pre>
+            <p class="meta">
+              I removed the Traefik labels here. They are only responsible for routing the
+              service through my reverse proxy and do not really explain the LiveSync setup.
+            </p>
+          </div>
+        </details>
+      </section>
+
+      <hr>
+
+      <section class="block" aria-labelledby="daily-title">
+        <h2 id="daily-title">How it feels</h2>
+        <p>
+          Once it is configured, it mostly disappears. I open Obsidian, write notes, and my other devices catch up almost instantly.
+          A note-taking app should not be particularly exciting, and this one is not.
+        </p>
+      </section>
+
+      <hr>
+
+      <section id="lessons" class="block" aria-labelledby="lessons-title">
+        <h2 id="lessons-title">Lessons learned</h2>
+        <ul class="list">
+          <li>Start with one vault and one empty test device before connecting everything. You don't want your precious notes erased.</li>
+          <li>Keep the encryption passphrase somewhere safe before adding more devices.</li>
+        </ul>
+        <p class="meta">
+          I followed this
+          <a href="https://www.reddit.com/r/selfhosted/comments/1eo7knj/guide_obsidian_with_free_selfhosted_instant_sync/" target="_blank" rel="noopener">Reddit guide</a>
+          for the detailed setup steps. The plugin itself is
+          <a href="https://github.com/vrtmrz/obsidian-livesync" target="_blank" rel="noopener">Self-hosted LiveSync</a>.
+        </p>
+      </section>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <small>&copy; <span id="current-year">2026</span> Mattis &mdash; <a href="index.html">back to homelab</a></small>
+  </footer>
+
+  <script>
+    document.getElementById('current-year').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
